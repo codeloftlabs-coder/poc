@@ -1,8 +1,8 @@
-import express from 'express';
-import cors from 'cors';
-import crypto from 'crypto-js';
-import fetch from 'node-fetch';
-import { fileURLToPath } from 'url';
+import express from "express";
+import cors from "cors";
+import crypto from "crypto-js";
+import fetch from "node-fetch";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -460,14 +460,14 @@ app.post("/api/initSampleMeetings", async (req, res) => {
     // Add timeout to prevent hanging
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-    
+
     try {
-      const response = await fetch(url, { 
+      const response = await fetch(url, {
         method: "POST",
-        signal: controller.signal
+        signal: controller.signal,
       });
       clearTimeout(timeoutId);
-      
+
       const xmlText = await response.text();
       console.log("Sample meeting creation response:", xmlText);
       const result = parseXmlResponse(xmlText);
@@ -479,7 +479,7 @@ app.post("/api/initSampleMeetings", async (req, res) => {
       });
     } catch (fetchError) {
       clearTimeout(timeoutId);
-      if (fetchError.name === 'AbortError') {
+      if (fetchError.name === "AbortError") {
         console.log("Sample meeting creation timed out");
         res.json({
           returncode: "SUCCESS",
@@ -496,7 +496,7 @@ app.post("/api/initSampleMeetings", async (req, res) => {
       returncode: "FAILED",
       messageKey: "internalError",
       message: "Failed to initialize sample meetings",
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -515,9 +515,13 @@ app.listen(PORT, async () => {
   console.log(`   GET  /api/getMeetings - Get all meetings`);
   console.log(`   POST /api/end - End meeting`);
   console.log(`   GET  /api/getRecordings - Get recordings`);
-  console.log(`   POST /api/downloadRecording - Download recording to local storage`);
+  console.log(
+    `   POST /api/downloadRecording - Download recording to local storage`
+  );
   console.log(`   GET  /api/localRecordings - Get local recordings`);
-  console.log(`   GET  /api/recording/:meetingID/:fileName - Serve local recording`);
+  console.log(
+    `   GET  /api/recording/:meetingID/:fileName - Serve local recording`
+  );
   console.log(`   POST /api/initSampleMeetings - Initialize sample meetings`);
 
   console.log(`\n🔧 Attempting to initialize sample meetings (optional)...`);
@@ -525,15 +529,15 @@ app.listen(PORT, async () => {
     // Add timeout to prevent hanging
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
-    
+
     const response = await fetch(
       `http://localhost:${PORT}/api/initSampleMeetings`,
       {
         method: "POST",
-        signal: controller.signal
+        signal: controller.signal,
       }
     );
-    
+
     clearTimeout(timeoutId);
     const result = await response.json();
     console.log(
@@ -541,13 +545,19 @@ app.listen(PORT, async () => {
       result.meetingCreated?.returncode || "Success"
     );
   } catch (error) {
-    if (error.name === 'AbortError') {
-      console.log(`⚠️  Sample meeting initialization timed out (this is normal for busy servers)`);
-    } else if (error.code === 'ETIMEDOUT' || error.code === 'ECONNRESET') {
-      console.log(`⚠️  BBB server connection timeout (this is normal for demo servers)`);
+    if (error.name === "AbortError") {
+      console.log(
+        `⚠️  Sample meeting initialization timed out (this is normal for busy servers)`
+      );
+    } else if (error.code === "ETIMEDOUT" || error.code === "ECONNRESET") {
+      console.log(
+        `⚠️  BBB server connection timeout (this is normal for demo servers)`
+      );
     } else {
       console.log(`⚠️  Could not initialize sample meetings:`, error.message);
     }
-    console.log(`📝 Server is ready - meetings will be created automatically when needed`);
+    console.log(
+      `📝 Server is ready - meetings will be created automatically when needed`
+    );
   }
 });

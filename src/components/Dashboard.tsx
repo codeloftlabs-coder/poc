@@ -3,7 +3,7 @@ import { Plus, Calendar, Users, Video, Play } from 'lucide-react';
 import { Meeting } from '../types';
 import CreateMeetingModal from './CreateMeetingModal';
 import MeetingCard from './MeetingCard';
-import RecordingsList from './RecordingsList';
+import { RecordingsList } from './RecordingsList';
 import JitsiMeetingRoom from './JitsiMeetingRoom';
 
 interface DashboardProps {
