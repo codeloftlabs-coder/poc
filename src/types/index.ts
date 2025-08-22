@@ -8,9 +8,8 @@ export interface Meeting {
   status: 'scheduled' | 'active' | 'completed';
   recordingEnabled: boolean;
   recordingUrl?: string;
-  meetingId?: string;
-  attendeePassword?: string;
-  moderatorPassword?: string;
+  roomName?: string;
+  joinUrl?: string;
 }
 
 export interface Student {
@@ -21,7 +20,16 @@ export interface Student {
   isOnline?: boolean;
 }
 
-export interface BigBlueButtonConfig {
-  serverUrl: string;
-  apiSecret: string;
+export interface JitsiConfig {
+  domain: string;
+  appId?: string;
+}
+
+export interface Recording {
+  id: string;
+  meetingId: string;
+  filename: string;
+  createdAt: string;
+  size: number;
+  duration?: number;
 }

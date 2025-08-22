@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Calendar, Users, Video, Settings, Play, Store as Stop, Eye } from 'lucide-react';
-import { Meeting, BigBlueButtonConfig } from '../types';
+import { Plus, Calendar, Users, Video, Play } from 'lucide-react';
+import { Meeting } from '../types';
 import CreateMeetingModal from './CreateMeetingModal';
 import MeetingCard from './MeetingCard';
 import RecordingsList from './RecordingsList';
-import BigBlueButtonConfigComponent from './BigBlueButtonConfig';
-import { defaultBBBConfig } from '../services/bigbluebutton';
+import JitsiMeetingRoom from './JitsiMeetingRoom';
 
 interface DashboardProps {
   onJoinMeeting: (meeting: Meeting) => void;
@@ -14,9 +13,8 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ onJoinMeeting }) => {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isConfigOpen, setIsConfigOpen] = useState(false);
-  const [bbbConfig, setBbbConfig] = useState<BigBlueButtonConfig>(defaultBBBConfig);
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'active' | 'completed' | 'recordings'>('upcoming');
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'active' | 'completed' | 'recordings' | 'meeting'>('upcoming');
+  const [activeMeeting, setActiveMeeting] = useState<{roomName: string, displayName: string} | null>(null);
 
   // Sample data
   useEffect(() => {
@@ -82,10 +80,14 @@ const Dashboard: React.FC<DashboardProps> = ({ onJoinMeeting }) => {
     setIsCreateModalOpen(false);
   };
 
-  const handleConfigSave = (config: BigBlueButtonConfig) => {
-    setBbbConfig(config);
-    // In production, save to localStorage or API
-    localStorage.setItem('bbbConfig', JSON.stringify(config));
+  const handleStartJitsiMeeting = (roomName: string, displayName: string = 'Host') => {
+    setActiveMeeting({ roomName, displayName });
+    setActiveTab('meeting');
+  };
+
+  const handleEndMeeting = () => {
+    setActiveMeeting(null);
+    setActiveTab('upcoming');
   };
 
   const filteredMeetings = activeTab === 'recordings' ? [] : meetings.filter(meeting => meeting.status === activeTab);
@@ -109,18 +111,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onJoinMeeting }) => {
             </div>
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => setIsConfigOpen(true)}
-                className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-                title="BigBlueButton Settings"
+                onClick={() => handleStartJitsiMeeting('quick-meeting-' + Date.now(), 'Host')}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
               >
-                <Settings className="h-5 w-5" />
+                <Video className="h-4 w-4" />
+                Quick Meeting
               </button>
               <button
                 onClick={() => setIsCreateModalOpen(true)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
               >
                 <Plus className="h-4 w-4" />
-                New Meeting
+                Schedule Meeting
               </button>
             </div>
           </div>
@@ -172,7 +174,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onJoinMeeting }) => {
         {/* Tabs */}
         <div className="bg-gray-800 rounded-lg border border-gray-700 mb-6">
           <div className="flex">
-            {(['upcoming', 'active', 'completed', 'recordings'] as const).map((tab) => (
+            {(['upcoming', 'active', 'completed', 'recordings', 'meeting'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -180,16 +182,25 @@ const Dashboard: React.FC<DashboardProps> = ({ onJoinMeeting }) => {
                   activeTab === tab
                     ? 'bg-blue-600 text-white'
                     : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                }`}
+                } ${tab === 'meeting' && !activeMeeting ? 'hidden' : ''}`}
               >
-                {tab === 'recordings' ? 'Recordings' : `${tab} Meetings`}
+                {tab === 'recordings' ? 'Recordings' : 
+                 tab === 'meeting' ? 'Live Meeting' : 
+                 `${tab} Meetings`}
               </button>
             ))}
           </div>
         </div>
 
         {/* Content Area */}
-        {activeTab === 'recordings' ? (
+        {activeTab === 'meeting' && activeMeeting ? (
+          <JitsiMeetingRoom
+            roomName={activeMeeting.roomName}
+            displayName={activeMeeting.displayName}
+            onMeetingEnd={handleEndMeeting}
+            embedded={true}
+          />
+        ) : activeTab === 'recordings' ? (
           <RecordingsList />
         ) : (
           <>
@@ -233,16 +244,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onJoinMeeting }) => {
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
           onCreate={handleCreateMeeting}
-        />
-      )}
-
-      {/* BigBlueButton Configuration Modal */}
-      {isConfigOpen && (
-        <BigBlueButtonConfigComponent
-          isOpen={isConfigOpen}
-          onClose={() => setIsConfigOpen(false)}
-          onSave={handleConfigSave}
-          currentConfig={bbbConfig}
         />
       )}
     </div>

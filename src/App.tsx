@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Dashboard from './components/Dashboard';
-import MeetingRoom from './components/MeetingRoom';
+import JitsiMeetingRoom from './components/JitsiMeetingRoom';
 import { Meeting } from './types';
 
 function App() {
@@ -22,8 +22,9 @@ function App() {
       {currentView === 'dashboard' ? (
         <Dashboard onJoinMeeting={handleJoinMeeting} />
       ) : (
-        <MeetingRoom 
-          meeting={selectedMeeting!} 
+        <JitsiMeetingRoom 
+          roomName={selectedMeeting?.roomName || selectedMeeting?.id || 'meeting'}
+          displayName="User"
           onLeaveMeeting={handleLeaveMeeting} 
         />
       )}
