@@ -85,11 +85,28 @@ const JitsiMeetingRoom: React.FC<JitsiMeetingRoomProps> = ({
   const handleApiReady = (externalApi: any) => {
     meetingRef.current = externalApi;
     
+    // Disable lobby features safely after API is ready
+    try {
+      // Set room subject
+      externalApi.executeCommand('subject', roomName);
+    } catch (error) {
+      console.log('Subject command not available:', error);
+    }
+    
     // Meeting events
     externalApi.addEventListener('videoConferenceJoined', () => {
       setMeetingStarted(true);
       startTimeRef.current = Date.now();
       setError(null);
+      
+      // Try to disable lobby after successfully joining
+      setTimeout(() => {
+        try {
+          externalApi.executeCommand('toggleLobby', false);
+        } catch (error) {
+          console.log('Lobby toggle not available:', error);
+        }
+      }, 1000);
     });
     
     externalApi.addEventListener('participantJoined', () => {
@@ -212,22 +229,38 @@ const JitsiMeetingRoom: React.FC<JitsiMeetingRoomProps> = ({
       {/* Jitsi Meeting Container */}
       <div className="flex-1 relative">
         <JitsiMeeting
-          domain="meet.jit.si"
+          domain="8x8.vc"
           roomName={roomName}
           configOverwrite={{
             startWithAudioMuted: false,
             startWithVideoMuted: false,
-            enableRecording: true,
-            hideRecordingLabel: false,
-            recordingService: {
-              enabled: true,
-              sharingEnabled: true
-            },
+            enableRecording: false, // Disable recording initially to avoid auth issues
+            hideRecordingLabel: true,
+            // Completely disable authentication features
+            enableUserRolesBasedOnToken: false,
+            enableInsecureRoomNameWarning: false,
+            doNotFlipLocalVideo: true,
+            // Disable all lobby and auth features
+            enableLobbyChat: false,
+            enableWelcomePage: false,
+            enableClosePage: false,
+            requireDisplayName: false,
+            enableFeaturesBasedOnToken: false,
+            disableInviteFunctions: false,
+            // Force open meeting mode
+            openBridgeChannel: true,
+            // Disable prejoin completely
+            prejoinPageEnabled: false,
+            // Disable moderation features
+            disableModeratorIndicator: true,
+            disablePolls: true,
+            disableReactions: false,
+            // Performance and UI settings
+            enableLayerSuspension: true,
             toolbarButtons: [
               'microphone',
               'camera', 
               'hangup',
-              'recording',
               'fullscreen',
               'fodeviceselection',
               'stats',
@@ -242,9 +275,12 @@ const JitsiMeetingRoom: React.FC<JitsiMeetingRoomProps> = ({
             },
             // Better performance settings
             disableAudioLevels: false,
-            enableLayerSuspension: true,
             enableNoAudioDetection: true,
-            enableNoisyMicDetection: true
+            enableNoisyMicDetection: true,
+            // Force disable any server-side lobby
+            lobby: {
+              enabled: false
+            }
           }}
           interfaceConfigOverwrite={{
             SHOW_JITSI_WATERMARK: false,
